@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>El Bosque Mágico de las Letras - 1° Básico</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: {
+                            100: '#E8F5E9',
+                            200: '#C8E6C9',
+                            500: '#4CAF50',
+                            700: '#2E7D32',
+                            900: '#1B5E20'
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        nunito: ['Nunito', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Fredoka', 'Nunito', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            background: #0f1f12;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border: 4px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+        }
+
+        .magic-glow {
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.7), 0 0 45px rgba(76, 175, 80, 0.5);
+        }
+
+        .btn-game {
+            transition: all 0.15s ease;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+            position: relative;
+            top: 0;
+        }
+
+        .btn-game:active {
+            top: 4px;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(3deg); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        #confettiCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col items-center justify-center p-0 m-0 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950 text-slate-800">
+
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="gameContainer" class="relative w-full h-full max-w-5xl max-h-[920px] flex flex-col justify-between overflow-hidden sm:rounded-3xl shadow-2xl border-4 border-emerald-600/40 bg-emerald-950">
+        
+        <!-- HEADER / NAVBAR -->
+        <header class="relative z-20 w-full px-3 py-2 sm:px-5 sm:py-3 bg-slate-900/95 backdrop-blur-md border-b-4 border-emerald-500/50 flex items-center justify-between text-white">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-500 border-2 border-amber-200 flex items-center justify-center shadow-lg text-2xl animate-float">
+                    🐱
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-lg font-bold tracking-wide text-amber-300 drop-shadow">
+                        <span id="levelNameHeader">1. El Sendero</span>
+                        <span id="oaHeaderBadge" class="text-xs text-emerald-300 block font-normal">Sílabas y Rimas</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Stats & Inventory Tracker -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- Level Counter -->
+                <div class="flex items-center gap-1 bg-emerald-800/90 px-2.5 py-1 rounded-full border border-emerald-400/50">
+                    <i class="fa-solid fa-map-location-dot text-emerald-300 text-xs"></i>
+                    <span id="levelDisplay" class="text-xs sm:text-sm font-extrabold text-emerald-100">Nivel 1/9</span>
+                </div>
+
+                <!-- Items Counter -->
+                <div class="flex items-center gap-1 bg-amber-500/20 border border-amber-400/40 px-2.5 py-1 rounded-full">
+                    <span class="text-sm sm:text-base">🎈</span>
+                    <span id="itemCountDisplay" class="text-xs sm:text-sm font-bold text-amber-300">0/3</span>
+                </div>
+
+                <!-- Key Status -->
+                <div id="keyDisplay" class="flex items-center gap-1 bg-slate-800 px-2.5 py-1 rounded-full border border-slate-600 opacity-40 transition-all duration-300">
+                    <span class="text-sm sm:text-base">🔑</span>
+                    <span id="keyLabel" class="text-xs font-bold text-slate-300 hidden sm:inline">Llave</span>
+                </div>
+
+                <!-- Home / Instructions Button -->
+                <button id="homeBtn" onclick="showStartModal()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 border-2 border-slate-600 hover:border-amber-400 flex items-center justify-center text-amber-300 text-xs sm:text-sm transition-all" title="Instrucciones">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+
+                <!-- Sound Effects Toggle -->
+                <button id="soundToggleBtn" onclick="toggleAudio()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 border-2 border-slate-600 hover:border-amber-400 flex items-center justify-center text-amber-300 text-xs sm:text-sm transition-all" title="Sonidos">
+                    <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- GAMEPLAY CANVAS AREA -->
+        <main class="relative flex-1 w-full h-full flex items-center justify-center bg-emerald-950 overflow-hidden">
+            
+            <!-- START / WELCOME SCREEN MODAL -->
+            <div id="startModal" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                <div class="glass-panel w-full max-w-lg rounded-3xl p-6 sm:p-8 text-center flex flex-col items-center border-4 border-amber-400 magic-glow relative overflow-hidden">
+                    
+                    <!-- Mascot Floating Badge -->
+                    <div class="w-20 h-20 bg-amber-400 border-4 border-amber-200 rounded-3xl flex items-center justify-center text-4xl shadow-xl animate-float mb-3">
+                        🐱
+                    </div>
+
+                    <h1 class="text-2xl sm:text-3xl font-black text-amber-500 drop-shadow mb-1">
+                        El Bosque Mágico de las Letras
+                    </h1>
+                    <p class="text-xs sm:text-sm font-bold text-emerald-800 mb-5 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
+                        Aventura de Lectura - 1° Básico
+                    </p>
+
+                    <!-- Instructions Grid for Early Readers -->
+                    <div class="w-full space-y-3 mb-6 text-left">
+                        <div class="flex items-center gap-3 bg-slate-100 p-3 rounded-2xl border-2 border-slate-200 shadow-sm">
+                            <span class="text-2xl shrink-0">🐱</span>
+                            <p class="text-xs sm:text-sm font-extrabold text-slate-700">
+                                <span class="text-emerald-700 font-black">1. Mueve a Mishi:</span> Usa las flechas de tu teclado o el control en pantalla.
+                            </p>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-slate-100 p-3 rounded-2xl border-2 border-slate-200 shadow-sm">
+                            <span class="text-2xl shrink-0">🎈🔑</span>
+                            <p class="text-xs sm:text-sm font-extrabold text-slate-700">
+                                <span class="text-amber-600 font-black">2. Junta Objetos:</span> Recoge los 3 objetos de fiesta y la llave dorada.
+                            </p>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-slate-100 p-3 rounded-2xl border-2 border-slate-200 shadow-sm">
+                            <span class="text-2xl shrink-0">🚪📝</span>
+                            <p class="text-xs sm:text-sm font-extrabold text-slate-700">
+                                <span class="text-teal-700 font-black">3. Reto de la Puerta:</span> Responde 5 preguntas cortas para pasar de nivel.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- START BUTTON -->
+                    <button id="startBtn" onclick="startGame()" class="btn-game w-full py-4 bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-900 font-black text-xl sm:text-2xl rounded-2xl border-b-4 border-amber-700 shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+                        <span>¡EMPEZAR A JUGAR!</span>
+                        <i class="fa-solid fa-play text-slate-900"></i>
+                    </button>
+                </div>
+            </div>
+
+            <canvas id="gameCanvas" class="w-full h-full block cursor-pointer"></canvas>
+
+            <!-- Short Instruction Banner -->
+            <div id="mazeBanner" class="absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/90 border-2 border-emerald-400/60 px-4 py-2 rounded-2xl text-white text-xs sm:text-sm flex items-center gap-2 shadow-2xl z-10 pointer-events-none transition-all duration-300 max-w-[92%] text-center">
+                <span class="text-lg">🧭</span>
+                <span id="mazeBannerText" class="font-semibold text-emerald-200">¡Junta los 3 objetos 🎈 y la llave 🔑 para abrir la puerta!</span>
+            </div>
+
+            <!-- OVERLAY MODAL FOR 5-QUESTION DOOR EXAM -->
+            <div id="doorModal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-30 flex items-center justify-center p-3 sm:p-5 hidden transition-all duration-300">
+                <div class="glass-panel w-full max-w-lg rounded-3xl p-4 sm:p-6 flex flex-col items-center text-center relative border-4 border-amber-400 shadow-2xl">
+                    
+                    <!-- Top Ribbon Badge -->
+                    <div id="modalOaBadge" class="absolute -top-5 bg-gradient-to-r from-amber-500 to-emerald-600 text-white font-black text-xs sm:text-sm px-4 py-1.5 rounded-full border-2 border-amber-200 shadow-lg tracking-wider uppercase">
+                        ¡RETO DE LA PUERTA!
+                    </div>
+
+                    <!-- Progress Dots Counter (1 to 5) -->
+                    <div class="w-full flex items-center justify-between my-2 px-2">
+                        <div class="text-xs font-extrabold text-emerald-900 uppercase tracking-wider flex items-center gap-1">
+                            <span>Pregunta</span>
+                            <span id="questionStepNum" class="text-sm text-amber-600 font-black">1/5</span>
+                        </div>
+                        <div id="progressDots" class="flex items-center gap-1.5">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden mb-3 border border-slate-300">
+                        <div id="progressBarFill" class="bg-gradient-to-r from-amber-400 to-emerald-500 h-full w-1/5 transition-all duration-300"></div>
+                    </div>
+
+                    <!-- Mascot Header -->
+                    <div class="flex items-center gap-2 my-1 w-full justify-center">
+                        <div class="w-10 h-10 bg-amber-100 rounded-full border-2 border-amber-400 flex items-center justify-center text-xl shadow-inner shrink-0">
+                            🐱
+                        </div>
+                        <h2 id="modalPromptTitle" class="text-base sm:text-lg font-extrabold text-slate-800 leading-snug text-left">
+                            Cargando...
+                        </h2>
+                    </div>
+
+                    <!-- Dynamic Question Area -->
+                    <div id="questionContainer" class="w-full my-2 min-h-[90px] flex flex-col items-center justify-center bg-emerald-50 rounded-2xl p-3 border-2 border-emerald-300 shadow-inner">
+                        <!-- Filled dynamically -->
+                    </div>
+
+                    <!-- Feedback Alert Message Box -->
+                    <div id="feedbackBox" class="w-full py-2 px-3 rounded-2xl my-1 text-xs sm:text-sm font-extrabold hidden transition-all"></div>
+
+                    <!-- Action Buttons / Options Grid -->
+                    <div id="optionsContainer" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
+                        <!-- Option buttons loaded dynamically -->
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- VICTORY / END OF LEVEL CELEBRATION MODAL -->
+            <div id="victoryModal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-40 flex items-center justify-center p-4 hidden">
+                <div class="glass-panel w-full max-w-md rounded-3xl p-6 text-center flex flex-col items-center border-4 border-amber-400 magic-glow">
+                    <div class="text-6xl my-2 animate-bounce">🎉 🐱 👑</div>
+                    <h2 id="victoryTitle" class="text-2xl font-black text-amber-600 mb-1">
+                        ¡Ganaste!
+                    </h2>
+                    <p id="victorySubtitle" class="text-sm font-bold text-slate-700 mb-4">
+                        ¡Respondiste muy bien y abriste la puerta!
+                    </p>
+
+                    <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 w-full mb-4 flex justify-around items-center">
+                        <div class="text-center">
+                            <span class="text-[10px] text-slate-500 font-extrabold block">ESTRELLAS</span>
+                            <span id="starScore" class="text-xl font-black text-amber-500">⭐⭐⭐⭐⭐</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-[10px] text-slate-500 font-extrabold block">PROGRESO</span>
+                            <span id="victoryProgressText" class="text-sm font-extrabold text-emerald-700">1 de 9 Nivel</span>
+                        </div>
+                    </div>
+
+                    <button id="nextLevelBtn" onclick="advanceLevel()" class="btn-game w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-lg rounded-2xl border-b-4 border-emerald-800 shadow-lg flex items-center justify-center gap-2">
+                        <span id="nextLevelBtnText">¡Siguiente Nivel!</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- CONTROLS & FOOTER -->
+        <footer class="relative z-20 w-full bg-slate-900/90 backdrop-blur-md border-t-2 border-emerald-500/30 px-3 py-2 flex items-center justify-between gap-2">
+            
+            <div class="text-slate-300 text-xs hidden md:flex items-center gap-2 font-bold">
+                <span class="bg-slate-800 px-2 py-1 rounded border border-slate-700 font-mono text-emerald-400">⌨️ Flechas / WASD</span>
+                <span>Mueve al gatito Mishi.</span>
+            </div>
+
+            <!-- Mobile Touch D-Pad Controls -->
+            <div class="flex items-center justify-center gap-2 w-full md:w-auto">
+                <div class="grid grid-cols-3 gap-1 w-36 h-20 text-white">
+                    <div></div>
+                    <button onclick="handleDpad('up')" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl flex items-center justify-center text-base active:bg-amber-500">
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </button>
+                    <div></div>
+
+                    <button onclick="handleDpad('left')" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl flex items-center justify-center text-base active:bg-amber-500">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button onclick="handleDpad('down')" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl flex items-center justify-center text-base active:bg-amber-500">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <button onclick="handleDpad('right')" class="btn-game bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl flex items-center justify-center text-base active:bg-amber-500">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs text-emerald-400 font-bold hidden sm:flex">
+                <i class="fa-solid fa-paw"></i>
+                <span>Gatito Mishi</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        /* --------------------------------------------------
+           1. AUDIO SYNTHESIZER (SOUND EFFECTS ONLY - NO VOICE)
+           -------------------------------------------------- */
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'step') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(350, now);
+                    osc.frequency.exponentialRampToValueAtTime(500, now + 0.05);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'item') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(170, now + 0.12);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'meow') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(850, now + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(450, now + 0.25);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'key') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, now);
+                    osc.frequency.setValueAtTime(1318.51, now + 0.1);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {
+                console.warn('Audio synth error', e);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const soundIcon = document.getElementById('soundIcon');
+            if (audioEnabled) {
+                soundIcon.className = "fa-solid fa-volume-high";
+                playSound('meow');
+            } else {
+                soundIcon.className = "fa-solid fa-volume-xmark";
+            }
+        }
+
+        /* --------------------------------------------------
+           START SCREEN / MODAL LOGIC
+           -------------------------------------------------- */
+        function startGame() {
+            initAudio();
+            playSound('meow');
+            const startModal = document.getElementById('startModal');
+            if (startModal) {
+                startModal.classList.add('hidden');
+            }
+        }
+
+        function showStartModal() {
+            const startModal = document.getElementById('startModal');
+            if (startModal) {
+                startModal.classList.remove('hidden');
+            }
+        }
+
+        /* --------------------------------------------------
+           2. SHORT & SIMPLE QUESTIONS FOR EARLY READERS (1° BÁSICO)
+           -------------------------------------------------- */
+        const LEVEL_DATA = [
+            // LEVEL 1
+            {
+                levelNum: 1,
+                name: "1. El Sendero",
+                oaTitle: "Sílabas y Rimas",
+                itemsData: [
+                    { name: "Globos", icon: "🎈" },
+                    { name: "Sombrero", icon: "🥳" },
+                    { name: "Torta", icon: "🎂" }
+                ],
+                questions: [
+                    {
+                        prompt: "Cuenta las sílabas:",
+                        word: "MA - RI - PO - SA",
+                        image: "🦋",
+                        options: ["2", "3", "4", "5"],
+                        correctIndex: 2
+                    },
+                    {
+                        prompt: "¿Qué empieza con LA?",
+                        options: [
+                            { text: "LÁPIZ ✏️", correct: true },
+                            { text: "GATO 🐱", correct: false },
+                            { text: "SOL ☀️", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "¿Qué rima con GATO?",
+                        options: [
+                            { text: "ZAPATO 👞", correct: true },
+                            { text: "FLOR 🌸", correct: false },
+                            { text: "NUBE ☁️", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Cuenta las sílabas:",
+                        word: "S O L",
+                        image: "☀️",
+                        options: ["1", "2", "3"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "¿Con qué vocal empieza?",
+                        word: "ABEJA",
+                        image: "🐝",
+                        options: ["A", "E", "I", "O"],
+                        correctIndex: 0
+                    }
+                ]
+            },
+            // LEVEL 2
+            {
+                levelNum: 2,
+                name: "2. El Claro",
+                oaTitle: "Sonidos Iniciales",
+                itemsData: [
+                    { name: "Regalo", icon: "🎁" },
+                    { name: "Tambor", icon: "🥁" },
+                    { name: "Luces", icon: "✨" }
+                ],
+                questions: [
+                    {
+                        prompt: "¿Con qué vocal empieza?",
+                        word: "OSO",
+                        image: "🐻",
+                        options: ["A", "E", "I", "O"],
+                        correctIndex: 3
+                    },
+                    {
+                        prompt: "¿Qué empieza con MA?",
+                        options: [
+                            { text: "MANZANA 🍎", correct: true },
+                            { text: "PATO 🦆", correct: false },
+                            { text: "LUNA 🌙", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "¿Qué termina en TÓN?",
+                        options: [
+                            { text: "RATÓN 🐭", correct: true },
+                            { text: "PERRO 🐶", correct: false },
+                            { text: "VACA 🐮", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Cuenta las sílabas:",
+                        word: "E - LE - FAN - TE",
+                        image: "🐘",
+                        options: ["2", "3", "4", "5"],
+                        correctIndex: 2
+                    },
+                    {
+                        prompt: "¿Qué rima con RANA?",
+                        options: [
+                            { text: "CAMPANA 🔔", correct: true },
+                            { text: "LIBRO 📖", correct: false },
+                            { text: "SOL ☀️", correct: false }
+                        ]
+                    }
+                ]
+            },
+            // LEVEL 3
+            {
+                levelNum: 3,
+                name: "3. El Río",
+                oaTitle: "Lectura (M, P, L, S)",
+                itemsData: [
+                    { name: "Guirnalda", icon: "🎏" },
+                    { name: "Jugo", icon: "🧃" },
+                    { name: "Corona", icon: "👑" }
+                ],
+                questions: [
+                    {
+                        prompt: "Junta las letras: MA + MA",
+                        options: ["MAMÁ", "PAPÁ", "LAMA"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Lee y elige:",
+                        word: "P U M A",
+                        options: [
+                            { text: "PUMA 🐆", correct: true },
+                            { text: "PERRO 🐶", correct: false },
+                            { text: "PATO 🦆", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "¿Qué dice aquí?",
+                        word: "S O L",
+                        options: ["SOL", "SAL", "SON"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Lee esta fruta:",
+                        word: "L I M Ó N",
+                        options: [
+                            { text: "LIMÓN 🍋", correct: true },
+                            { text: "PERA 🍐", correct: false },
+                            { text: "UVA 🍇", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Junta las letras: PA + PÁ",
+                        options: ["PAPÁ", "MAMÁ", "PUMA"],
+                        correctIndex: 0
+                    }
+                ]
+            },
+            // LEVEL 4
+            {
+                levelNum: 4,
+                name: "4. El Cañón",
+                oaTitle: "Lectura (T, D, N, F)",
+                itemsData: [
+                    { name: "Banderines", icon: "🏁" },
+                    { name: "Galleta", icon: "🍪" },
+                    { name: "Linterna", icon: "💡" }
+                ],
+                questions: [
+                    {
+                        prompt: "Lee la palabra:",
+                        word: "T O M A T E",
+                        options: ["TOMATE 🍅", "PAPA 🥔", "FLOR 🌸"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Lee el objeto:",
+                        word: "D A D O",
+                        options: [
+                            { text: "DADO 🎲", correct: true },
+                            { text: "AUTO 🚗", correct: false },
+                            { text: "CASA 🏠", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Junta las letras: NU + BE",
+                        options: ["NUBE ☁️", "NAVE 🚀", "NIDO 🪹"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Lee la planta:",
+                        word: "F L O R",
+                        options: [
+                            { text: "FLOR 🌸", correct: true },
+                            { text: "ÁRBOL 🌳", correct: false },
+                            { text: "SOL ☀️", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Lee el animal:",
+                        word: "P A T O",
+                        options: ["PATO 🦆", "GATO 🐱", "PERRO 🐶"],
+                        correctIndex: 0
+                    }
+                ]
+            },
+            // LEVEL 5
+            {
+                levelNum: 5,
+                name: "5. El Bambú",
+                oaTitle: "Oraciones Cortas",
+                itemsData: [
+                    { name: "Confeti", icon: "🎊" },
+                    { name: "Dona", icon: "🍩" },
+                    { name: "Micrófono", icon: "🎤" }
+                ],
+                questions: [
+                    {
+                        prompt: "Lee:",
+                        word: "El sol brilla.",
+                        options: ["El Sol ☀️", "La Luna 🌙", "La Nube ☁️"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Lee:",
+                        word: "El gato duerme.",
+                        options: [
+                            { text: "Gato 🐱", correct: true },
+                            { text: "Perro 🐶", correct: false },
+                            { text: "Pez 🐟", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Lee:",
+                        word: "La mesa es verde.",
+                        options: ["Mesa verde 🟢", "Silla azul 🔵", "Cama roja 🔴"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Lee:",
+                        word: "Mishi toma leche.",
+                        options: ["Leche 🥛", "Agua 💧", "Jugo 🧃"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Lee:",
+                        word: "Un oso alto.",
+                        options: ["Oso 🐻", "Gato 🐱", "Zorro 🦊"],
+                        correctIndex: 0
+                    }
+                ]
+            },
+            // LEVEL 6
+            {
+                levelNum: 6,
+                name: "6. La Cueva",
+                oaTitle: "Completar Letras",
+                itemsData: [
+                    { name: "Antorcha", icon: "🔦" },
+                    { name: "Helado", icon: "🍦" },
+                    { name: "Sillón", icon: "🛋️" }
+                ],
+                questions: [
+                    {
+                        prompt: "¿Qué letra falta?",
+                        wordDisplay: "G A [ ? ] O",
+                        options: ["T", "M", "S"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "¿Qué letra falta?",
+                        wordDisplay: "P E R [ ? ] O",
+                        options: ["R", "Z", "F"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Completa:",
+                        wordDisplay: "L U N [ ? ]",
+                        options: ["A", "E", "I"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Completa:",
+                        wordDisplay: "C A S [ ? ]",
+                        options: ["A", "O", "E"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Completa:",
+                        wordDisplay: "F I E S [ ? ] A",
+                        options: ["T", "P", "D"],
+                        correctIndex: 0
+                    }
+                ]
+            },
+            // LEVEL 7
+            {
+                levelNum: 7,
+                name: "7. El Valle",
+                oaTitle: "Espacios en Palabras",
+                itemsData: [
+                    { name: "Flor Mágica", icon: "🌺" },
+                    { name: "Cupcake", icon: "🧁" },
+                    { name: "Cinta", icon: "🎀" }
+                ],
+                questions: [
+                    {
+                        prompt: "¿Cuál está bien escrita?",
+                        options: [
+                            { text: "El gato juega.", correct: true },
+                            { text: "Elgatojuega.", correct: false },
+                            { text: "E l g a t o", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Elige la correcta:",
+                        options: [
+                            { text: "La flor es roja.", correct: true },
+                            { text: "Lafloresroja.", correct: false },
+                            { text: "La flor esroja.", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "¿Cuál tiene espacios bien puestos?",
+                        options: [
+                            { text: "Mishi busca la llave.", correct: true },
+                            { text: "Mishibuscalallave.", correct: false },
+                            { text: "Mishi buscalallave.", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Elige la bien escrita:",
+                        options: [
+                            { text: "Me gusta la fruta.", correct: true },
+                            { text: "Megustalafruta.", correct: false },
+                            { text: "Me gusta lafruta.", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "¿Cuál se lee bien?",
+                        options: [
+                            { text: "Un perro amigo.", correct: true },
+                            { text: "Unperroamigo.", correct: false },
+                            { text: "Un perroamigo.", correct: false }
+                        ]
+                    }
+                ]
+            },
+            // LEVEL 8
+            {
+                levelNum: 8,
+                name: "8. El Castillo",
+                oaTitle: "Escritura Simple",
+                itemsData: [
+                    { name: "Copa de Oro", icon: "🏆" },
+                    { name: "Manzana", icon: "🍎" },
+                    { name: "Trompeta", icon: "🎺" }
+                ],
+                questions: [
+                    {
+                        prompt: "¿Cómo se escribe el 1?",
+                        options: ["UNO", "DOS", "TRES"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "¿De qué color es el pasto?",
+                        options: ["VERDE", "ROJO", "AZUL"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "¿Cómo se escribe la fruta roja?",
+                        options: ["FRUTILLA", "PERA", "UVA"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "Nombre de la mascota:",
+                        options: ["MISHI", "MISI", "MICHI"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "¿Dónde estamos jugando?",
+                        options: ["BOSQUE", "PLAYA", "CASA"],
+                        correctIndex: 0
+                    }
+                ]
+            },
+            // LEVEL 9
+            {
+                levelNum: 9,
+                name: "9. La Fiesta",
+                oaTitle: "Gran Desafío Final",
+                itemsData: [
+                    { name: "Gran Torta", icon: "🎂" },
+                    { name: "Fuegos Artificiales", icon: "🎆" },
+                    { name: "Estrella", icon: "⭐" }
+                ],
+                questions: [
+                    {
+                        prompt: "Cuenta las sílabas:",
+                        word: "CUM - PLE - A - ÑOS",
+                        image: "🎉",
+                        options: ["2", "3", "4"],
+                        correctIndex: 2
+                    },
+                    {
+                        prompt: "Lee la palabra:",
+                        word: "F E S T E J O",
+                        options: ["FESTEJO 🎉", "DORMIR 💤", "CORRER 🏃"],
+                        correctIndex: 0
+                    },
+                    {
+                        prompt: "¿Qué rima con CANCIÓN?",
+                        options: [
+                            { text: "CORAZÓN ❤️", correct: true },
+                            { text: "MESA 🪑", correct: false },
+                            { text: "GATO 🐱", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "Elige la bien escrita:",
+                        options: [
+                            { text: "¡La fiesta comenzó!", correct: true },
+                            { text: "¡Lafiestacomenzó!", correct: false },
+                            { text: "L a f i e s t a", correct: false }
+                        ]
+                    },
+                    {
+                        prompt: "¿Con qué vocal empieza?",
+                        word: "ESTRELLA",
+                        image: "⭐",
+                        options: ["E", "A", "I"],
+                        correctIndex: 0
+                    }
+                ]
+            }
+        ];
+
+        /* --------------------------------------------------
+           3. MAZE MAKER & GAME WORLD STATE (9 DISTINCT MAZES)
+           -------------------------------------------------- */
+        const GRID_ROWS = 11;
+        const GRID_COLS = 15;
+
+        // Grid Elements:
+        // 0: Path | 1: Wall | 2, 3, 4: Items | 7: Key 🔑 | 8: Door 🚪
+
+        const MAZE_LAYOUTS = [
+            // Level 1
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,2,0,0,1,0,0,0,3,0,1],
+                [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1],
+                [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+                [1,4,0,0,0,0,1,7,0,0,1,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,0,1,0,1,1,1],
+                [1,0,0,0,0,0,0,0,0,0,1,0,0,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 2
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,1,2,0,0,1,0,0,0,0,1,3,0,1],
+                [1,0,1,1,1,0,1,0,1,1,0,1,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,1,1,0,1,1,1,1,1,0,1,0,1,0,1],
+                [1,7,1,0,0,0,0,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,4,0,1,0,0,0,0,0,1,0,1],
+                [1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 3
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,2,0,1,0,0,0,1,0,3,0,0,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,1,1,0,1],
+                [1,0,1,0,0,0,1,0,0,0,1,7,1,0,1],
+                [1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,1,0,0,0,1],
+                [1,1,1,1,1,0,1,0,1,0,1,1,1,0,1],
+                [1,4,0,0,1,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,0,1,0,1,1,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 4
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,0,0,1,2,0,0,1,3,1],
+                [1,1,1,0,1,0,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
+                [1,0,1,7,0,0,0,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,1,1,0,1,0,1,1,1,1,1],
+                [1,0,0,0,4,0,1,0,1,0,0,0,0,0,1],
+                [1,1,1,1,1,0,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 5
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,1,0,0,0,1,2,0,0,0,1,0,3,1],
+                [1,0,1,0,1,0,1,1,1,1,0,1,0,1,1],
+                [1,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,0,1,1,1,1,0,1],
+                [1,0,0,0,0,0,7,1,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,0,1,1,1,1,0,1,0,1],
+                [1,0,4,0,0,1,0,0,0,0,1,0,0,0,1],
+                [1,1,1,1,0,1,1,1,1,0,1,1,1,1,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 6
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,1,2,0,0,0,1,0,0,3,1],
+                [1,0,1,1,0,1,1,1,1,0,1,0,1,1,1],
+                [1,0,1,7,0,0,0,0,1,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+                [1,4,0,0,1,0,0,0,0,0,1,0,1,0,1],
+                [1,0,1,0,1,1,1,1,1,0,1,0,0,0,1],
+                [1,0,1,0,0,0,0,0,0,0,1,1,1,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 7
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,2,0,1,0,0,0,1,3,0,0,0,0,1],
+                [1,0,1,0,1,0,1,0,1,1,1,1,1,0,1],
+                [1,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
+                [1,0,0,0,1,7,0,0,0,0,1,0,0,0,1],
+                [1,1,1,0,1,1,1,1,1,0,1,1,1,1,1],
+                [1,4,0,0,0,0,0,0,1,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 8
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,2,0,0,0,1,3,0,0,0,1],
+                [1,1,1,0,1,1,1,1,0,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,1,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,0,1,1,1,1,0,1,0,1],
+                [1,0,1,7,0,1,0,0,0,0,1,0,0,0,1],
+                [1,0,1,0,0,1,1,1,1,0,1,1,1,0,1],
+                [1,4,1,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Level 9
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,2,0,0,0,1,0,0,0,1,3,0,0,1],
+                [1,0,1,1,1,0,1,0,1,0,1,1,1,0,1],
+                [1,0,1,0,0,0,1,0,1,0,0,0,1,0,1],
+                [1,0,1,0,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,1,7,0,0,0,0,1,0,0,0,1],
+                [1,1,1,1,1,0,1,1,1,0,1,1,1,0,1],
+                [1,4,0,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,8,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        ];
+
+        let gameState = {
+            levelIndex: 0,
+            itemsCollected: 0,
+            hasKey: false,
+            doorUnlocked: false,
+            doorExamActive: false,
+            currentQuestionIndex: 0,
+            cat: { x: 1, y: 1 }
+        };
+
+        let currentGrid = [];
+
+        /* --------------------------------------------------
+           4. CANVAS RENDERER & GRAPHICS ENGINE
+           -------------------------------------------------- */
+        let canvas, ctx;
+
+        function initCanvas() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            drawWorld();
+        }
+
+        function drawWorld() {
+            if (!ctx || !canvas || !currentGrid || !currentGrid.length) return;
+
+            const tileSize = Math.min(canvas.width / GRID_COLS, canvas.height / GRID_ROWS);
+            const offsetX = (canvas.width - tileSize * GRID_COLS) / 2;
+            const offsetY = (canvas.height - tileSize * GRID_ROWS) / 2;
+
+            // Clear Background
+            ctx.fillStyle = "#0c2b11";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Render Tiles
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    const x = offsetX + c * tileSize;
+                    const y = offsetY + r * tileSize;
+                    const tile = currentGrid[r][c];
+
+                    // Base Path Grass Tile
+                    ctx.fillStyle = (r + c) % 2 === 0 ? "#1b4d20" : "#17421c";
+                    ctx.fillRect(x, y, tileSize, tileSize);
+
+                    // Grass details
+                    ctx.fillStyle = "#225927";
+                    ctx.fillRect(x + tileSize * 0.2, y + tileSize * 0.2, tileSize * 0.1, tileSize * 0.1);
+
+                    if (tile === 1) {
+                        drawTreeTile(x, y, tileSize);
+                    } else if (tile >= 2 && tile <= 4) {
+                        const itemIdx = tile - 2;
+                        const levelObj = LEVEL_DATA[gameState.levelIndex];
+                        const itemData = levelObj.itemsData[itemIdx];
+                        drawItemTile(x, y, tileSize, itemData.icon);
+                    } else if (tile === 7) {
+                        drawKeyTile(x, y, tileSize);
+                    } else if (tile === 8) {
+                        drawDoorTile(x, y, tileSize);
+                    }
+                }
+            }
+
+            // Render Cat Character
+            drawCatCharacter(
+                offsetX + gameState.cat.x * tileSize,
+                offsetY + gameState.cat.y * tileSize,
+                tileSize
+            );
+        }
+
+        function drawTreeTile(x, y, size) {
+            ctx.fillStyle = "#3e2723";
+            ctx.fillRect(x + size * 0.35, y + size * 0.5, size * 0.3, size * 0.45);
+            
+            ctx.fillStyle = "#2e7d32";
+            ctx.beginPath();
+            ctx.arc(x + size * 0.5, y + size * 0.4, size * 0.42, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#4caf50";
+            ctx.beginPath();
+            ctx.arc(x + size * 0.38, y + size * 0.3, size * 0.22, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawItemTile(x, y, size, icon) {
+            ctx.fillStyle = "rgba(255, 235, 59, 0.3)";
+            ctx.beginPath();
+            ctx.arc(x + size * 0.5, y + size * 0.5, size * 0.38, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = `${size * 0.55}px Fredoka, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(icon, x + size * 0.5, y + size * 0.5);
+        }
+
+        function drawKeyTile(x, y, size) {
+            ctx.fillStyle = "rgba(255, 215, 0, 0.4)";
+            ctx.beginPath();
+            ctx.arc(x + size * 0.5, y + size * 0.5, size * 0.42, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = `${size * 0.58}px Fredoka, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🔑", x + size * 0.5, y + size * 0.5);
+        }
+
+        function drawDoorTile(x, y, size) {
+            ctx.fillStyle = gameState.doorUnlocked ? "#4caf50" : "#8d6e63";
+            ctx.fillRect(x + size * 0.18, y + size * 0.1, size * 0.64, size * 0.82);
+
+            ctx.font = `${size * 0.55}px Fredoka, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(gameState.doorUnlocked ? "🚪✨" : "🔒🚪", x + size * 0.5, y + size * 0.5);
+        }
+
+        // Draw Tabby Cat
+        function drawCatCharacter(x, y, size) {
+            const cx = x + size * 0.5;
+            const cy = y + size * 0.5;
+            const r = size * 0.35;
+
+            // Tail
+            ctx.strokeStyle = "#8D6E63";
+            ctx.lineWidth = size * 0.1;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.arc(cx + r * 0.8, cy + r * 0.2, r * 0.5, 0, Math.PI);
+            ctx.stroke();
+
+            // Head / Body Base
+            ctx.fillStyle = "#A1887F";
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Dark Tabby Stripes
+            ctx.fillStyle = "#4E342E";
+            ctx.fillRect(cx - r * 0.2, cy - r * 0.9, r * 0.1, r * 0.35);
+            ctx.fillRect(cx, cy - r * 0.95, r * 0.1, r * 0.4);
+            ctx.fillRect(cx + r * 0.15, cy - r * 0.9, r * 0.1, r * 0.35);
+
+            // Ears
+            ctx.fillStyle = "#8D6E63";
+            ctx.beginPath();
+            ctx.moveTo(cx - r * 0.8, cy - r * 0.2);
+            ctx.lineTo(cx - r * 0.4, cy - r * 1.1);
+            ctx.lineTo(cx - r * 0.1, cy - r * 0.7);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(cx + r * 0.8, cy - r * 0.2);
+            ctx.lineTo(cx + r * 0.4, cy - r * 1.1);
+            ctx.lineTo(cx + r * 0.1, cy - r * 0.7);
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner Ear
+            ctx.fillStyle = "#FFAB91";
+            ctx.beginPath();
+            ctx.arc(cx - r * 0.45, cy - r * 0.6, r * 0.18, 0, Math.PI * 2);
+            ctx.arc(cx + r * 0.45, cy - r * 0.6, r * 0.18, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = "#4CAF50";
+            ctx.beginPath();
+            ctx.arc(cx - r * 0.35, cy - r * 0.1, r * 0.2, 0, Math.PI * 2);
+            ctx.arc(cx + r * 0.35, cy - r * 0.1, r * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pupils
+            ctx.fillStyle = "#000000";
+            ctx.beginPath();
+            ctx.arc(cx - r * 0.35, cy - r * 0.1, r * 0.09, 0, Math.PI * 2);
+            ctx.arc(cx + r * 0.35, cy - r * 0.1, r * 0.09, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Nose
+            ctx.fillStyle = "#FF8A80";
+            ctx.beginPath();
+            ctx.arc(cx, cy + r * 0.15, r * 0.1, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Whiskers
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx - r * 0.2, cy + r * 0.2);
+            ctx.lineTo(cx - r * 0.9, cy + r * 0.1);
+            ctx.moveTo(cx - r * 0.2, cy + r * 0.25);
+            ctx.lineTo(cx - r * 0.85, cy + r * 0.35);
+            ctx.moveTo(cx + r * 0.2, cy + r * 0.2);
+            ctx.lineTo(cx + r * 0.9, cy + r * 0.1);
+            ctx.moveTo(cx + r * 0.2, cy + r * 0.25);
+            ctx.lineTo(cx + r * 0.85, cy + r * 0.35);
+            ctx.stroke();
+
+            // Hat
+            ctx.fillStyle = "#FFC107";
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - r * 1.35);
+            ctx.lineTo(cx - r * 0.25, cy - r * 0.7);
+            ctx.lineTo(cx + r * 0.25, cy - r * 0.7);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        /* --------------------------------------------------
+           5. GAME MECHANICS & MOVEMENT
+           -------------------------------------------------- */
+        function moveCat(dx, dy) {
+            if (gameState.doorExamActive) return;
+
+            const newX = gameState.cat.x + dx;
+            const newY = gameState.cat.y + dy;
+
+            if (newX < 0 || newX >= GRID_COLS || newY < 0 || newY >= GRID_ROWS) return;
+
+            const targetTile = currentGrid[newY][newX];
+
+            // Wall
+            if (targetTile === 1) {
+                playSound('step');
+                return;
+            }
+
+            // Pick Up Item
+            if (targetTile >= 2 && targetTile <= 4) {
+                currentGrid[newY][newX] = 0;
+                gameState.itemsCollected++;
+                playSound('item');
+                playSound('meow');
+                updateUIHeader();
+
+                const levelObj = LEVEL_DATA[gameState.levelIndex];
+                const itemObj = levelObj.itemsData[targetTile - 2];
+                showTemporaryToast(`¡Recogiste: ${itemObj.name} ${itemObj.icon}! (${gameState.itemsCollected}/3)`);
+            }
+
+            // Pick Up Key
+            if (targetTile === 7) {
+                currentGrid[newY][newX] = 0;
+                gameState.hasKey = true;
+                playSound('key');
+                playSound('meow');
+                updateUIHeader();
+                showTemporaryToast("🔑 ¡Tienes la Llave! Ve a la puerta.");
+            }
+
+            // Locked Door Interaction
+            if (targetTile === 8) {
+                if (!gameState.hasKey) {
+                    playSound('error');
+                    showTemporaryToast("🔑 ¡Busca la llave en el laberinto!");
+                    return;
+                }
+
+                if (gameState.itemsCollected < 3) {
+                    playSound('error');
+                    showTemporaryToast("🎈 ¡Junta los 3 objetos primero!");
+                    return;
+                }
+
+                startDoorExam();
+                return;
+            }
+
+            // Advance cat
+            gameState.cat.x = newX;
+            gameState.cat.y = newY;
+            playSound('step');
+            drawWorld();
+        }
+
+        function handleDpad(direction) {
+            if (direction === 'up') moveCat(0, -1);
+            if (direction === 'down') moveCat(0, 1);
+            if (direction === 'left') moveCat(-1, 0);
+            if (direction === 'right') moveCat(1, 0);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') moveCat(0, -1);
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') moveCat(0, 1);
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') moveCat(-1, 0);
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') moveCat(1, 0);
+        });
+
+        document.getElementById('gameCanvas').addEventListener('click', (e) => {
+            if (gameState.doorExamActive) return;
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            const tileSize = Math.min(canvas.width / GRID_COLS, canvas.height / GRID_ROWS);
+            const offsetX = (canvas.width - tileSize * GRID_COLS) / 2;
+            const offsetY = (canvas.height - tileSize * GRID_ROWS) / 2;
+
+            const tileC = Math.floor((clickX - offsetX) / tileSize);
+            const tileR = Math.floor((clickY - offsetY) / tileSize);
+
+            const dx = Math.sign(tileC - gameState.cat.x);
+            const dy = Math.sign(tileR - gameState.cat.y);
+
+            if (Math.abs(tileC - gameState.cat.x) > Math.abs(tileR - gameState.cat.y)) {
+                if (dx !== 0) moveCat(dx, 0);
+            } else {
+                if (dy !== 0) moveCat(0, dy);
+            }
+        });
+
+        /* --------------------------------------------------
+           6. 5-QUESTION DOOR EXAM SYSTEM
+           -------------------------------------------------- */
+        function startDoorExam() {
+            gameState.doorExamActive = true;
+            gameState.currentQuestionIndex = 0;
+            
+            document.getElementById('doorModal').classList.remove('hidden');
+            renderCurrentExamQuestion();
+        }
+
+        function renderCurrentExamQuestion() {
+            const levelObj = LEVEL_DATA[gameState.levelIndex];
+            const q = levelObj.questions[gameState.currentQuestionIndex];
+
+            // Progress bar
+            const qNum = gameState.currentQuestionIndex + 1;
+            document.getElementById('questionStepNum').innerText = `${qNum}/5`;
+            document.getElementById('progressBarFill').style.width = `${(qNum / 5) * 100}%`;
+
+            // Progress dots
+            const dotsContainer = document.getElementById('progressDots');
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const dot = document.createElement('div');
+                if (i < gameState.currentQuestionIndex) {
+                    dot.className = "w-3 h-3 rounded-full bg-emerald-500 border border-emerald-300 shadow";
+                } else if (i === gameState.currentQuestionIndex) {
+                    dot.className = "w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-amber-200 animate-pulse shadow-md";
+                } else {
+                    dot.className = "w-3 h-3 rounded-full bg-slate-300 border border-slate-400 opacity-60";
+                }
+                dotsContainer.appendChild(dot);
+            }
+
+            document.getElementById('modalPromptTitle').innerText = q.prompt;
+
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = '';
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            document.getElementById('feedbackBox').classList.add('hidden');
+
+            // Visual displays for word/image
+            if (q.word || q.wordDisplay || q.image) {
+                let innerHTML = '';
+                if (q.image) {
+                    innerHTML += `<div class="text-5xl my-1 animate-bounce">${q.image}</div>`;
+                }
+                if (q.word || q.wordDisplay) {
+                    const textToShow = q.wordDisplay || q.word;
+                    innerHTML += `<div class="text-xl sm:text-2xl font-black text-emerald-950 tracking-widest bg-amber-200 px-4 py-2 rounded-2xl border-2 border-amber-400 my-1 shadow-sm">${textToShow}</div>`;
+                }
+                container.innerHTML = innerHTML;
+            } else {
+                container.innerHTML = `<div class="text-4xl my-1">📖⭐</div>`;
+            }
+
+            // Options buttons
+            q.options.forEach((opt, index) => {
+                let textDisplay = "";
+                let isCorrect = false;
+
+                if (typeof opt === 'object') {
+                    textDisplay = opt.text;
+                    isCorrect = opt.correct;
+                } else {
+                    textDisplay = opt;
+                    isCorrect = (index === q.correctIndex);
+                }
+
+                const btn = document.createElement('button');
+                btn.className = "btn-game w-full py-3.5 px-3 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-white font-extrabold text-base sm:text-lg rounded-2xl border-b-4 border-emerald-700 shadow-md flex items-center justify-center gap-2 transition-all";
+                btn.innerHTML = `<span>${textDisplay}</span>`;
+                btn.onclick = () => checkExamAnswer(isCorrect);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkExamAnswer(isCorrect) {
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.remove('hidden');
+
+            if (isCorrect) {
+                playSound('correct');
+                feedbackBox.className = "w-full py-2 px-3 rounded-2xl my-1 text-xs sm:text-sm font-extrabold bg-emerald-100 text-emerald-900 border-2 border-emerald-400 text-center";
+                feedbackBox.innerText = "⭐ ¡Muy bien! Respuesta correcta.";
+
+                setTimeout(() => {
+                    gameState.currentQuestionIndex++;
+                    if (gameState.currentQuestionIndex < 5) {
+                        renderCurrentExamQuestion();
+                    } else {
+                        // All 5 completed
+                        gameState.doorExamActive = false;
+                        gameState.doorUnlocked = true;
+                        document.getElementById('doorModal').classList.add('hidden');
+                        triggerLevelVictory();
+                    }
+                }, 900);
+
+            } else {
+                playSound('error');
+                feedbackBox.className = "w-full py-2 px-3 rounded-2xl my-1 text-xs sm:text-sm font-extrabold bg-amber-100 text-amber-900 border-2 border-amber-400 text-center animate-bounce";
+                feedbackBox.innerText = "💡 ¡Casi! Lee de nuevo e inténtalo.";
+            }
+        }
+
+        /* --------------------------------------------------
+           7. LEVEL PROGRESSION & CELEBRATION
+           -------------------------------------------------- */
+        function triggerLevelVictory() {
+            playSound('correct');
+            playSound('meow');
+
+            const levelObj = LEVEL_DATA[gameState.levelIndex];
+            document.getElementById('victoryTitle').innerText = `¡${levelObj.name} Superado!`;
+            document.getElementById('victorySubtitle').innerText = `¡Respondiste todas las preguntas correctamente y abriste la puerta!`;
+            document.getElementById('victoryProgressText').innerText = `${gameState.levelIndex + 1} de 9 Niveles`;
+
+            const nextBtnText = document.getElementById('nextLevelBtnText');
+            if (gameState.levelIndex === 8) {
+                nextBtnText.innerText = "¡Volver a Jugar!";
+            } else {
+                nextBtnText.innerText = "¡Siguiente Nivel!";
+            }
+
+            startConfetti();
+            document.getElementById('victoryModal').classList.remove('hidden');
+        }
+
+        function advanceLevel() {
+            stopConfetti();
+            document.getElementById('victoryModal').classList.add('hidden');
+
+            if (gameState.levelIndex < LEVEL_DATA.length - 1) {
+                gameState.levelIndex++;
+                loadLevel(gameState.levelIndex);
+            } else {
+                gameState.levelIndex = 0;
+                loadLevel(0);
+                showTemporaryToast("👑 ¡Completaste todos los niveles!");
+            }
+        }
+
+        function loadLevel(idx) {
+            const levelObj = LEVEL_DATA[idx];
+            gameState.itemsCollected = 0;
+            gameState.hasKey = false;
+            gameState.doorUnlocked = false;
+            gameState.doorExamActive = false;
+            gameState.currentQuestionIndex = 0;
+            gameState.cat = { x: 1, y: 1 };
+
+            currentGrid = JSON.parse(JSON.stringify(MAZE_LAYOUTS[idx]));
+
+            updateUIHeader();
+            drawWorld();
+
+            showTemporaryToast(`🌲 Nivel ${idx + 1}: ${levelObj.name}`);
+        }
+
+        function updateUIHeader() {
+            const levelObj = LEVEL_DATA[gameState.levelIndex];
+            document.getElementById('levelNameHeader').innerText = levelObj.name;
+            document.getElementById('oaHeaderBadge').innerText = levelObj.oaTitle;
+            document.getElementById('levelDisplay').innerText = `Nivel ${gameState.levelIndex + 1}/9`;
+            document.getElementById('itemCountDisplay').innerText = `${gameState.itemsCollected}/3`;
+
+            const keyDisp = document.getElementById('keyDisplay');
+            if (gameState.hasKey) {
+                keyDisp.classList.remove('opacity-40');
+                keyDisp.classList.add('bg-amber-500', 'border-amber-300', 'text-amber-950');
+            } else {
+                keyDisp.classList.add('opacity-40');
+                keyDisp.classList.remove('bg-amber-500', 'border-amber-300', 'text-amber-950');
+            }
+        }
+
+        function showTemporaryToast(msg) {
+            const bannerText = document.getElementById('mazeBannerText');
+            if (bannerText) {
+                bannerText.innerText = msg;
+            }
+        }
+
+        /* --------------------------------------------------
+           8. CONFETTI ANIMATION SYSTEM
+           -------------------------------------------------- */
+        let confettiInterval = null;
+        let confettiParticles = [];
+
+        function startConfetti() {
+            const cCanvas = document.getElementById('confettiCanvas');
+            const cCtx = cCanvas.getContext('2d');
+            cCanvas.width = window.innerWidth;
+            cCanvas.height = window.innerHeight;
+
+            confettiParticles = [];
+            for (let i = 0; i < 90; i++) {
+                confettiParticles.push({
+                    x: Math.random() * cCanvas.width,
+                    y: Math.random() * cCanvas.height - cCanvas.height,
+                    color: ['#FFD700', '#FF4081', '#00E676', '#00E5FF', '#FF9100'][Math.floor(Math.random() * 5)],
+                    size: Math.random() * 8 + 4,
+                    speedY: Math.random() * 3 + 2,
+                    speedX: Math.random() * 2 - 1
+                });
+            }
+
+            if (confettiInterval) clearInterval(confettiInterval);
+            confettiInterval = setInterval(() => {
+                cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+                confettiParticles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    if (p.y > cCanvas.height) p.y = -10;
+                    cCtx.fillStyle = p.color;
+                    cCtx.beginPath();
+                    cCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    cCtx.fill();
+                });
+            }, 20);
+        }
+
+        function stopConfetti() {
+            if (confettiInterval) clearInterval(confettiInterval);
+            const cCanvas = document.getElementById('confettiCanvas');
+            const cCtx = cCanvas.getContext('2d');
+            cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+        }
+
+        /* --------------------------------------------------
+           9. INITIALIZATION
+           -------------------------------------------------- */
+        window.onload = function() {
+            loadLevel(0);
+            initCanvas();
+        };
+    </script>
+</body>
+</html>
